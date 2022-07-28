@@ -636,6 +636,11 @@ class CourseRunTests(OAuth2Mixin, TestCase):
         course_run2.save()
         assert course_run2.enterprise_subscription_inclusion is True
 
+        course3 = factories.CourseFactory(enterprise_subscription_inclusion=True)
+        course_run3 = factories.CourseRunFactory(course=course3, pacing_type='instructor_paced')
+        course_run3.save()
+        assert course_run3.enterprise_subscription_inclusion is False
+
     @ddt.data(
         # Case 1: Return False when there are no paid Seats.
         ([('audit', 0)], False),
@@ -2181,6 +2186,23 @@ class ProgramTests(TestCase):
         """Verify that program default status is Unpublished"""
         program = factories.ProgramBaseFactory()
         assert program.status == ProgramStatus.Unpublished
+
+    def test_program_is_2u_degree_program(self):
+        program = factories.ProgramBaseFactory()
+        degree = factories.DegreeFactory()
+        degree.additional_metadata = factories.DegreeAdditionalMetadataFactory()
+        program.degree = degree
+        assert program.is_2u_degree_program
+
+    def test_program_without_degree_is_not_2u_degree(self):
+        program = factories.ProgramBaseFactory()
+        assert not program.is_2u_degree_program
+
+    def test_program_with_degree_without_metadata_is_not_2u_degree(self):
+        program = factories.ProgramBaseFactory()
+        degree = factories.DegreeFactory()
+        program.degree = degree
+        assert not program.is_2u_degree_program
 
 
 class PathwayTests(TestCase):
